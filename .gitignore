@@ -1,0 +1,4 @@
+chess_test
+*.elf
+*.bin
+*.o
