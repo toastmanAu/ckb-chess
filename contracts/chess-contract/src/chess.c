@@ -193,9 +193,8 @@ int chess_apply_move(Board *board, const Move *mv) {
     char target = board->squares[mv->to_rank][mv->to_file];
     if (is_piece(target) && same_color(piece, target)) return CHESS_ILLEGAL_MOVE;
 
-    /* TODO: Full per-piece move validation goes here.
-     * For now: validate that the move doesn't leave own king in check.
-     * Full validation (ray checking per piece type) to be added. */
+    /* Validate piece-specific movement rules */
+    if (!chess_validate_piece_move(board, mv)) return CHESS_ILLEGAL_MOVE;
 
     /* Apply move to a copy first to test for check */
     Board test = *board;
@@ -222,6 +221,12 @@ int chess_apply_move(Board *board, const Move *mv) {
     /* Commit move */
     *board = test;
 
+    /* Apply castling rook move if king castled */
+    if (to_lower(piece) == 'k' && (mv->to_file == 6 || mv->to_file == 2)
+        && mv->from_file == 4) {
+        chess_apply_castling(board, mv);
+    }
+
     /* Update en passant state */
     board->en_passant_file = -1;
     board->en_passant_rank = -1;
@@ -244,8 +249,12 @@ int chess_apply_move(Board *board, const Move *mv) {
     board->white_to_move = !white;
     board->move_count++;
 
-    /* Check for checkmate/stalemate (TODO: implement has_legal_moves) */
-    /* Return CHESS_OK for now — full termination detection is next step */
+    /* Detect checkmate and stalemate */
+    if (!chess_has_legal_moves(board)) {
+        return chess_in_check(board, board->white_to_move)
+               ? CHESS_CHECKMATE
+               : CHESS_STALEMATE;
+    }
     return CHESS_OK;
 }
 

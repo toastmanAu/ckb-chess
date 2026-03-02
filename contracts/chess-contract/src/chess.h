@@ -73,3 +73,14 @@ void chess_serialise(const Board *board, uint8_t *out);
 int chess_in_check(const Board *board, int white);
 
 #endif /* CHESS_H */
+
+/* ── Extended API (chess_moves.c) ────────────────────────────────────────── */
+
+/* Validate piece-specific movement rules (does NOT check for self-check) */
+int chess_validate_piece_move(const Board *board, const Move *move);
+
+/* Apply castling rook movement after king move is committed */
+void chess_apply_castling(Board *board, const Move *move);
+
+/* Returns 1 if the side to move has at least one legal move */
+int chess_has_legal_moves(const Board *board);
