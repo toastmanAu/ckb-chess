@@ -7,6 +7,15 @@
 #include <assert.h>
 #include "chess.h"
 
+/* Forward declarations */
+static void test_castling_kingside(void);
+static void test_knight_jump(void);
+static void test_pawn_capture_diagonal(void);
+static void test_pawn_cant_capture_forward(void);
+static void test_king_cant_move_into_check(void);
+static void test_promotion(void);
+
+
 #define PASS(name) printf("✓ %s\n", name)
 
 static void test_init() {
@@ -126,6 +135,82 @@ int main() {
     test_has_legal_moves();
     test_illegal_move_blocked();
     test_scholar_mate();
-    printf("=== all %d tests passed ===\n", 9);
+    test_castling_kingside();
+    test_knight_jump();
+    test_pawn_capture_diagonal();
+    test_pawn_cant_capture_forward();
+    test_king_cant_move_into_check();
+    test_promotion();
+    printf("=== all 15 tests passed ===\n");
     return 0;
+}
+
+/* ── Additional move validation tests ──────────────────────────────────────── */
+
+static void test_castling_kingside() {
+    Board b; chess_init(&b);
+    b.squares[0][5] = EMPTY; /* f1 */
+    b.squares[0][6] = EMPTY; /* g1 */
+    Move mv = {0, 4, 0, 6, 0};
+    int r = chess_apply_move(&b, &mv);
+    assert(r == CHESS_OK);
+    assert(b.squares[0][6] == 'K');
+    assert(b.squares[0][5] == 'R');
+    printf("✓ kingside castling\n");
+}
+
+static void test_knight_jump() {
+    Board b; chess_init(&b);
+    Move mv = {0, 6, 2, 5, 0}; /* Ng1→f3 */
+    int r = chess_apply_move(&b, &mv);
+    assert(r == CHESS_OK);
+    printf("✓ knight jump\n");
+}
+
+static void test_pawn_capture_diagonal() {
+    Board b; chess_init(&b);
+    b.squares[1][4] = EMPTY; b.squares[3][4] = 'P'; /* e4 */
+    b.squares[6][3] = EMPTY; b.squares[4][3] = 'p'; /* d5 */
+    b.white_to_move = 1;
+    Move mv = {3, 4, 4, 3, 0};
+    int r = chess_apply_move(&b, &mv);
+    assert(r == CHESS_OK);
+    assert(b.squares[4][3] == 'P');
+    printf("✓ pawn diagonal capture\n");
+}
+
+static void test_pawn_cant_capture_forward() {
+    Board b; chess_init(&b);
+    b.squares[2][4] = 'p';
+    b.white_to_move = 1;
+    Move mv = {1, 4, 2, 4, 0};
+    int r = chess_apply_move(&b, &mv);
+    assert(r != CHESS_OK);
+    printf("✓ blocked pawn rejected\n");
+}
+
+static void test_king_cant_move_into_check() {
+    Board b; chess_init(&b);
+    for (int r=0;r<8;r++) for (int f=0;f<8;f++) b.squares[r][f]=EMPTY;
+    b.squares[0][4] = 'K';
+    b.squares[7][4] = 'r';
+    b.white_to_move = 1;
+    Move mv = {0, 4, 1, 4, 0};
+    int r2 = chess_apply_move(&b, &mv);
+    assert(r2 != CHESS_OK);
+    printf("✓ king can't move into check\n");
+}
+
+static void test_promotion() {
+    Board b; chess_init(&b);
+    for (int r=0;r<8;r++) for (int f=0;f<8;f++) b.squares[r][f]=EMPTY;
+    b.squares[6][4] = 'P';
+    b.squares[0][4] = 'K';
+    b.squares[7][0] = 'k';
+    b.white_to_move = 1;
+    Move mv = {6, 4, 7, 4, 'q'};
+    int r = chess_apply_move(&b, &mv);
+    assert(r == CHESS_OK);
+    assert(b.squares[7][4] == 'Q');
+    printf("✓ pawn promotion to queen\n");
 }
