@@ -2,3 +2,4 @@ chess_test
 *.elf
 *.bin
 *.o
+relayer/node_modules/
