@@ -1,0 +1,13 @@
+{
+  "name": "ckb-chess-relayer",
+  "version": "0.1.0",
+  "description": "Trusted relayer for ckb-chess — message forwarding, challenge coordination, chain monitoring",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js"
+  },
+  "dependencies": {
+    "ws": "^8.16.0"
+  }
+}
